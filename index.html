@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World War II: Battle for Victory</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        .battle-log {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            padding: 10px;
+            margin-top: 20px;
+            background: #fff;
+        }
+        .unit {
+            display: inline-block;
+            width: 150px;
+            margin: 10px;
+            padding: 10px;
+            background: #eee;
+            border-radius: 5px;
+        }
+        .shop {
+            margin-top: 20px;
+            padding: 10px;
+            background: #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>World War II: Battle for Victory</h1>
+    <div id="unit1" class="unit">
+        <h3>Unit 1 - Allied Forces</h3>
+        <p id="unit1Health">Health: 100</p>
+        <button onclick="attack('unit1', 'unit2')">Attack Unit 2</button>
+        <button onclick="useWeapon('unit1', 'unit2', 'gun')">Use Gun</button>
+        <button onclick="useWeapon('unit1', 'unit2', 'sword')">Use Sword</button>
+        <button onclick="useWeapon('unit1', 'unit2', 'shield')">Use Shield</button>
+        <button onclick="advance('unit1')">Advance</button>
+        <button onclick="retreat('unit1')">Retreat</button>
+    </div>
+    <div id="unit2" class="unit">
+        <h3>Unit 2 - Axis Forces</h3>
+        <p id="unit2Health">Health: 100</p>
+        <button onclick="attack('unit2', 'unit1')">Attack Unit 1</button>
+        <button onclick="useWeapon('unit2', 'unit1', 'gun')">Use Gun</button>
+        <button onclick="useWeapon('unit2', 'unit1', 'sword')">Use Sword</button>
+        <button onclick="useWeapon('unit2', 'unit1', 'shield')">Use Shield</button>
+        <button onclick="advance('unit2')">Advance</button>
+        <button onclick="retreat('unit2')">Retreat</button>
+    </div>
+    
+    <div class="shop" id="shop">
+        <h3>Shop</h3>
+        <p>Buy items to upgrade your units!</p>
+        <button onclick="buyItem('unit1', 'health')">Buy Health (+20) - 10 Gold</button>
+        <button onclick="buyItem('unit1', 'gun')">Buy Gun Upgrade - 15 Gold</button>
+        <button onclick="buyItem('unit1', 'shield')">Buy Shield Upgrade - 10 Gold</button>
+        <button onclick="buyItem('unit1', 'ak47')">Buy AK-47 - 25 Gold</button>
+        <button onclick="buyItem('unit1', 'mk')">Buy MK II - 30 Gold</button>
+        <button onclick="buyItem('unit1', 'sten')">Buy Sten Gun - 20 Gold</button>
+        <button onclick="buyAmmo('unit1')">Buy Ammo - 5 Gold</button>
+        <p id="unit1Gold">Unit 1 Gold: 50</p>
+        <p id="unit2Gold">Unit 2 Gold: 50</p>
+    </div>
+
+    <div class="battle-log" id="battleLog"></div>
+
+    <script>
+        let units = {
+            unit1: { health: 100, position: 0, gold: 50, ammo: 5, weapons: [] },
+            unit2: { health: 100, position: 0, gold: 50, ammo: 5, weapons: [] }
+        };
+
+        function attack(attackerId, targetId) {
+            if (units[targetId].health <= 0) {
+                log(`Unit ${targetId} is already defeated!`);
+                return;
+            }
+
+            let damage = Math.floor(Math.random() * 15) + 5;
+            units[targetId].health -= damage;
+
+            if (units[targetId].health < 0) units[targetId].health = 0;
+
+            document.getElementById(targetId + 'Health').innerText = `Health: ${units[targetId].health}`;
+            log(`Unit ${attackerId} attacked Unit ${targetId} for ${damage} damage!`);
+
+            if (units[targetId].health === 0) {
+                log(`Unit ${targetId} has been defeated!`);
+                units[attackerId].gold += 20;
+                updateGold(attackerId);
+            }
+        }
+
+        function useWeapon(attackerId, targetId, weapon) {
+            if (units[targetId].health <= 0) {
+                log(`Unit ${targetId} is already defeated!`);
+                return;
+            }
+
+            if (weapon === 'gun' && units[attackerId].ammo <= 0) {
+                log(`Unit ${attackerId} has no ammo left!`);
+                return;
+            }
+
+            let damage = 0;
+            let weaponName = '';
+
+            switch (weapon) {
+                case 'gun':
+                    damage = Math.floor(Math.random() * 20) + 10;
+                    weaponName = 'gun';
+                    units[attackerId].ammo -= 1;
+                    break;
+                case 'sword':
+                    damage = Math.floor(Math.random() * 10) + 5;
+                    weaponName = 'sword';
+                    break;
+                case 'shield':
+                    damage = -(Math.floor(Math.random() * 10) + 5);
+                    weaponName = 'shield';
+                    break;
+            }
+
+            units[targetId].health -= damage;
+            if (units[targetId].health < 0) units[targetId].health = 0;
+            document.getElementById(targetId + 'Health').innerText = `Health: ${units[targetId].health}`;
+
+            if (damage > 0) {
+                log(`Unit ${attackerId} used ${weaponName} on Unit ${targetId} for ${damage} damage!`);
+            } else {
+                log(`Unit ${attackerId} used ${weaponName} to block, recovering ${-damage} health!`);
+            }
+
+            if (units[targetId].health === 0) {
+                log(`Unit ${targetId} has been defeated!`);
+                units[attackerId].gold += 20;
+                updateGold(attackerId);
+            }
+        }
+
+        function advance(unitId) {
+            units[unitId].position += 1;
+            log(`Unit ${unitId} advanced to position ${units[unitId].position}.`);
+        }
+
+        function retreat(unitId) {
+            if (units[unitId].position > 0) {
+                units[unitId].position -= 1;
+                log(`Unit ${unitId} retreated to position ${units[unitId].position}.`);
+            } else {
+                log(`Unit ${unitId} cannot retreat any further!`);
+            }
+        }
+
+        function buyItem(unitId, item) {
+            let cost = 0;
+            switch (item) {
+                case 'health':
+                    cost = 10;
+                    if (units[unitId].gold >= cost) {
+                        units[unitId].health += 20;
+                        units[unitId].gold -= cost;
+                        updateGold(unitId);
+                        document.getElementById(unitId + 'Health').innerText = `Health: ${units[unitId].health}`;
+                        log(`Unit ${unitId} bought Health Upgrade (+20 Health)`);
+                    } else {
+                        log(`Unit ${unitId} does not have enough gold to buy Health Upgrade.`);
+                    }
+                    break;
+                case 'gun':
+                    cost = 15;
+                    if (units[unitId].gold >= cost) {
+                        units[unitId].gold -= cost;
+                        updateGold(unitId);
+                        log(`Unit ${unitId} bought Gun Upgrade.`);
+                    } else {
+                        log(`Unit ${unitId} does not have enough gold to buy Gun Upgrade.`);
+                    }
+                    break;
+                case 'shield':
+                    cost = 10;
+                    if (units[unitId].gold >= cost) {
+                        units[unitId].gold -= cost;
+                        updateGold(unitId);
+                        log(`Unit ${unitId} bought Shield Upgrade.`);
+                    } else {
+                        log(`Unit ${unitId} does not have enough gold to buy Shield Upgrade.`);
+                    }
+                    break;
+                case 'ak47':
+                    cost = 25;
+                    if (units[unitId].gold >= cost) {
+                        units[unitId].weapons.push('AK-47');
+                        units[unitId].gold -= cost;
+                        updateGold(unitId);
+                        log(`Unit ${unitId} bought an AK-47.`);
+                    } else {
+                        log(`Unit ${unitId} does not have enough gold to buy AK-47.`);
+                    }
+                    break;
+                case 'mk':
+                    cost = 30;
+                    if (units[unitId].gold >= cost) {
+                        units[unitId].weapons.push('MK II');
+                        units[unitId].gold -= cost;
+                        updateGold(unitId);
+                        log(`Unit ${unitId} bought an MK II.`);
+                    } else {
+                        log(`Unit ${unitId} does not have enough gold to buy MK II.`);
+                    }
+                    break;
+                case 'sten':
+                    cost = 20;
+                    if (units[unitId].gold >= cost) {
+                        units[unitId].weapons.push('Sten Gun');
+                        units[unitId].gold -= cost;
+                        updateGold(unitId);
+                        log(`Unit ${unitId} bought a Sten Gun.`);
+                    } else {
+                        log(`Unit ${unitId} does not have enough gold to buy Sten Gun.`);
+                    }
+                    break;
+            }
+        }
+
+        function buyAmmo(unitId) {
+            let cost = 5;
+            if (units[unitId].gold >= cost) {
+                units[unitId].ammo += 5;
+                units[unitId].gold -= cost;
+                updateGold(unitId);
+                log(`Unit ${unitId} bought 5 ammo.`);
+            } else {
+                log(`Unit ${unitId} does not have enough gold to buy ammo.`);
+            }
+        }
+
+        function updateGold(unitId) {
+            document.getElementById(unitId + 'Gold').innerText = `Unit ${unitId} Gold: ${units[unitId].gold}`;
+        }
+
+        function log(message) {
+            const logElement = document.getElementById('battleLog');
+            logElement.innerHTML += `<p>${message}</p>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+    </script>
+</body>
+</html>
